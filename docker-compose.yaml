@@ -24,7 +24,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./migrations:/migrations
+      - ./internal/migrations:/migrations
     command: [ "-path", "/migrations", "-database", "postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-root}@postgres:5432/${POSTGRES_DB:-plantcare}?sslmode=disable", "up" ]
 
   api:

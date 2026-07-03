@@ -1,0 +1,21 @@
+2026-07-03T10:32:50.852876	INFO	api/main.go:30	Starting application	{"port": "8080"}
+2026-07-03T10:32:50.914747	INFO	api/main.go:37	Connected to PostgreSQL database successfully.
+2026-07-03T10:32:50.918468	INFO	api/main.go:85	Server is starting	{"port": "8080"}
+2026-07-03T10:32:54.583430	INFO	middleware/logger.go:13	Incoming request	{"request_id": "91eb09bb-5003-4f9e-a8a9-8453f2971e82", "method": "GET", "path": "/api/user/plants", "client_ip": "172.21.0.1", "user_agent": "PostmanRuntime/7.51.1"}
+2026-07-03T10:32:54.584380	DEBUG	middleware/logger.go:22	Completed request logic	{"request_id": "91eb09bb-5003-4f9e-a8a9-8453f2971e82"}
+2026-07-03T10:32:54.602259	INFO	middleware/trace.go:29	Request finished	{"request_id": "91eb09bb-5003-4f9e-a8a9-8453f2971e82", "status": 404, "duration": "18.545352ms"}
+2026-07-03T10:32:58.564551	INFO	middleware/logger.go:13	Incoming request	{"request_id": "3fc467ac-7c54-4f85-8298-c123943909b2", "method": "GET", "path": "/api/user/plants", "client_ip": "172.21.0.1", "user_agent": "PostmanRuntime/7.51.1"}
+2026-07-03T10:32:58.565556	DEBUG	middleware/logger.go:22	Completed request logic	{"request_id": "3fc467ac-7c54-4f85-8298-c123943909b2"}
+2026-07-03T10:32:58.566480	INFO	middleware/trace.go:29	Request finished	{"request_id": "3fc467ac-7c54-4f85-8298-c123943909b2", "status": 404, "duration": "1.95309ms"}
+2026-07-03T10:33:29.587426	INFO	middleware/logger.go:13	Incoming request	{"request_id": "66a381ef-e4c0-4cb4-9eb4-07d48fe3067d", "method": "GET", "path": "/api/user/plants", "client_ip": "172.21.0.1", "user_agent": "PostmanRuntime/7.51.1"}
+2026-07-03T10:33:29.588659	DEBUG	middleware/logger.go:22	Completed request logic	{"request_id": "66a381ef-e4c0-4cb4-9eb4-07d48fe3067d"}
+2026-07-03T10:33:29.589419	INFO	middleware/trace.go:29	Request finished	{"request_id": "66a381ef-e4c0-4cb4-9eb4-07d48fe3067d", "status": 404, "duration": "2.023021ms"}
+2026-07-03T10:33:32.111778	INFO	middleware/logger.go:13	Incoming request	{"request_id": "97b5c68b-839c-4fa1-8950-9bae616a1916", "method": "GET", "path": "/api/user/plants", "client_ip": "172.21.0.1", "user_agent": "PostmanRuntime/7.51.1"}
+2026-07-03T10:33:32.112688	DEBUG	middleware/logger.go:22	Completed request logic	{"request_id": "97b5c68b-839c-4fa1-8950-9bae616a1916"}
+2026-07-03T10:33:32.113286	INFO	middleware/trace.go:29	Request finished	{"request_id": "97b5c68b-839c-4fa1-8950-9bae616a1916", "status": 404, "duration": "1.517993ms"}
+2026-07-03T10:34:05.283151	INFO	middleware/logger.go:13	Incoming request	{"request_id": "9be28a2f-5c4a-495b-8bd6-756d0901b898", "method": "GET", "path": "/api/user/plants", "client_ip": "172.21.0.1", "user_agent": "PostmanRuntime/7.51.1"}
+2026-07-03T10:34:05.286650	DEBUG	middleware/logger.go:22	Completed request logic	{"request_id": "9be28a2f-5c4a-495b-8bd6-756d0901b898"}
+2026-07-03T10:34:05.287778	INFO	middleware/trace.go:29	Request finished	{"request_id": "9be28a2f-5c4a-495b-8bd6-756d0901b898", "status": 404, "duration": "4.671488ms"}
+2026-07-03T10:34:36.364543	INFO	middleware/logger.go:13	Incoming request	{"request_id": "71ccf04f-4afa-4fc3-8b31-1464ac1cbe0b", "method": "GET", "path": "/api/v1/user/plants", "client_ip": "172.21.0.1", "user_agent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; ru-RU) WindowsPowerShell/5.1.26100.8655"}
+2026-07-03T10:34:36.365858	DEBUG	middleware/logger.go:22	Completed request logic	{"request_id": "71ccf04f-4afa-4fc3-8b31-1464ac1cbe0b"}
+2026-07-03T10:34:36.366769	INFO	middleware/trace.go:29	Request finished	{"request_id": "71ccf04f-4afa-4fc3-8b31-1464ac1cbe0b", "status": 401, "duration": "2.343611ms"}
