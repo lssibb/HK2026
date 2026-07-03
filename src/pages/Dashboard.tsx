@@ -48,7 +48,7 @@ export function Dashboard() {
             "Заведём первое растение?"
           ) : active.length > 0 ? (
             <>
-              Сегодня в оранжерее{" "}
+              Сегодня в Sweet Garden{" "}
               <span className="text-orchid tabular-nums">{activeCount}</span>{" "}
               {active.length === 1 ? "задача" : "дела"}
             </>
