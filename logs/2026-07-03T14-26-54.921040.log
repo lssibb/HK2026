@@ -1,0 +1,3 @@
+2026-07-03T14:26:54.921677	INFO	api/main.go:30	Starting application	{"port": "8080"}
+2026-07-03T14:26:54.951833	INFO	api/main.go:37	Connected to PostgreSQL database successfully.
+2026-07-03T14:26:54.952206	INFO	api/main.go:85	Server is starting	{"port": "8080"}

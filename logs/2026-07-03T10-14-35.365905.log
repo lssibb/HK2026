@@ -1,0 +1,2 @@
+2026-07-03T10:14:35.570144	INFO	api/main.go:30	Starting application	{"port": "8080"}
+2026-07-03T10:14:35.647776	FATAL	api/main.go:34	Database connection failed	{"error": "unable to ping database: failed to connect to `user=root database=plantcare`: 172.21.0.2:5432 (postgres): server error: FATAL: the database system is starting up (SQLSTATE 57P03)"}

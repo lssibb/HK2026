@@ -1,4 +1,4 @@
-package core_logger
+package logger
 
 import (
 	"context"
@@ -13,19 +13,30 @@ import (
 
 type Logger struct {
 	*zap.Logger
-
-	file *os.File //для корректного закрытия файла
+	file *os.File
 }
 
-// получаем логгер через контекст
-func FromContext(ctx context.Context) *Logger {
-	log, ok := ctx.Value("log").(*Logger)
+var globalLogger *Logger
 
-	if !ok {
-		panic("no logger in context")
+func Get() *Logger {
+	if globalLogger == nil {
+		return &Logger{Logger: zap.NewNop()}
 	}
+	return globalLogger
+}
 
-	return log
+type reqIDKey struct{}
+
+func WithRequestID(ctx context.Context, reqID string) context.Context {
+	return context.WithValue(ctx, reqIDKey{}, reqID)
+}
+
+func FromContext(ctx context.Context) *Logger {
+	reqID, ok := ctx.Value(reqIDKey{}).(string)
+	if ok && reqID != "" {
+		return Get().With(zap.String("request_id", reqID))
+	}
+	return Get()
 }
 
 func NewLogger(config LoggerConfig) (*Logger, error) {
@@ -39,11 +50,7 @@ func NewLogger(config LoggerConfig) (*Logger, error) {
 	}
 
 	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05.000000")
-
-	logFilePath := filepath.Join(
-		config.Folder,
-		fmt.Sprintf("%s.log", timestamp),
-	)
+	logFilePath := filepath.Join(config.Folder, fmt.Sprintf("%s.log", timestamp))
 
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -52,31 +59,41 @@ func NewLogger(config LoggerConfig) (*Logger, error) {
 
 	zapConfig := zap.NewDevelopmentEncoderConfig()
 	zapConfig.EncodeTime = zapcore.TimeEncoderOfLayout("2006-01-02T15:04:05.000000")
+	zapConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 
-	zapEncoder := zapcore.NewConsoleEncoder(zapConfig)
+	fileZapConfig := zapConfig
+	fileZapConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+
+	consoleEncoder := zapcore.NewConsoleEncoder(zapConfig)
+	fileEncoder := zapcore.NewConsoleEncoder(fileZapConfig)
 
 	core := zapcore.NewTee(
-		zapcore.NewCore(zapEncoder, zapcore.AddSync(os.Stdout), zapLvl),
-		zapcore.NewCore(zapEncoder, zapcore.AddSync(logFile), zapLvl),
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapLvl),
+		zapcore.NewCore(fileEncoder, zapcore.AddSync(logFile), zapLvl),
 	)
 
 	zapLogger := zap.New(core, zap.AddCaller())
 
-	return &Logger{
+	loggerInstance := &Logger{
 		Logger: zapLogger,
-		file: logFile,
-	}, nil
+		file:   logFile,
+	}
+	globalLogger = loggerInstance
+
+	return loggerInstance, nil
 }
 
 func (l *Logger) Close() {
-	if err := l.file.Close(); err != nil {
-		fmt.Println("Failed to close application to logger: ", err)
+	if l.file != nil {
+		if err := l.file.Close(); err != nil {
+			fmt.Println("Failed to close application to logger: ", err)
+		}
 	}
 }
 
 func (l *Logger) With(field ...zap.Field) *Logger {
 	return &Logger{
 		Logger: l.Logger.With(field...),
-		file: l.file,
+		file:   l.file,
 	}
 }

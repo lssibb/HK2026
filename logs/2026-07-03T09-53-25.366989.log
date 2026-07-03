@@ -1,0 +1,2 @@
+2026-07-03T09:53:25.368461	INFO	api/main.go:30	Starting application	{"port": "8080"}
+2026-07-03T09:53:25.372003	FATAL	api/main.go:34	Database connection failed	{"error": "unable to ping database: failed to connect to `user=root database=plantcare`: 172.21.0.3:5432 (postgres): dial error: dial tcp 172.21.0.3:5432: connect: connection refused"}
