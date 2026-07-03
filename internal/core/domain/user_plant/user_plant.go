@@ -12,6 +12,7 @@ type UserPlant struct {
 	RepottingIntervalDays *int       `json:"repotting_interval_days" db:"repotting_interval_days"`
 	NextWateringDate      *time.Time `json:"next_watering_date" db:"next_watering_date"`
 	NextRepottingDate     *time.Time `json:"next_repotting_date" db:"next_repotting_date"`
+	ImageURL              *string    `json:"image_url" db:"image_url"`
 	AddedDate             time.Time  `json:"added_date" db:"added_date"`
 	UpdatedAt             time.Time  `json:"updated_at" db:"updated_at"`
 }

@@ -26,11 +26,11 @@ func NewPostgresUserPlantsRepository(pool *pgxpool.Pool) UserPlantsRepository {
 
 func (r *postgresUserPlantsRepository) AddUserPlant(ctx context.Context, plant domain.UserPlant) (domain.UserPlant, error) {
 	query := `
-		INSERT INTO user_plants (user_id, plant_id, custom_name, notes, watering_interval_days, repotting_interval_days, next_watering_date, next_repotting_date)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id, user_id, plant_id, custom_name, notes, watering_interval_days, repotting_interval_days, next_watering_date, next_repotting_date, added_date, updated_at
+		INSERT INTO user_plants (user_id, plant_id, custom_name, notes, watering_interval_days, repotting_interval_days, next_watering_date, next_repotting_date, image_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id, user_id, plant_id, custom_name, notes, watering_interval_days, repotting_interval_days, next_watering_date, next_repotting_date, image_url, added_date, updated_at
 	`
-	err := pgxscan.Get(ctx, r.pool, &plant, query, plant.UserID, plant.PlantID, plant.CustomName, plant.Notes, plant.WateringIntervalDays, plant.RepottingIntervalDays, plant.NextWateringDate, plant.NextRepottingDate)
+	err := pgxscan.Get(ctx, r.pool, &plant, query, plant.UserID, plant.PlantID, plant.CustomName, plant.Notes, plant.WateringIntervalDays, plant.RepottingIntervalDays, plant.NextWateringDate, plant.NextRepottingDate, plant.ImageURL)
 	return plant, err
 }
 

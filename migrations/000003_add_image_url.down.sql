@@ -1,0 +1,2 @@
+ALTER TABLE plants DROP COLUMN IF EXISTS image_url;
+ALTER TABLE user_plants DROP COLUMN IF EXISTS image_url;

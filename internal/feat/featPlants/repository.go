@@ -26,7 +26,7 @@ func NewPostgresPlantsRepository(pool *pgxpool.Pool) PlantsRepository {
 func (r *postgresPlantsRepository) GetPlants(ctx context.Context, searchQuery string) ([]domain.Plant, error) {
 	query := `
 		SELECT id, name, watering_recommendations, lighting_recommendations, 
-		       repotting_info, toxicity_info, additional_features, created_at, updated_at
+		       repotting_info, toxicity_info, additional_features, image_url, created_at, updated_at
 		FROM plants
 		WHERE name ILIKE $1
 		ORDER BY name ASC
@@ -39,7 +39,7 @@ func (r *postgresPlantsRepository) GetPlants(ctx context.Context, searchQuery st
 func (r *postgresPlantsRepository) GetPlantByID(ctx context.Context, id int64) (domain.Plant, error) {
 	query := `
 		SELECT id, name, watering_recommendations, lighting_recommendations, 
-		       repotting_info, toxicity_info, additional_features, created_at, updated_at
+		       repotting_info, toxicity_info, additional_features, image_url, created_at, updated_at
 		FROM plants
 		WHERE id = $1
 	`

@@ -1,0 +1,2 @@
+ALTER TABLE plants ADD COLUMN image_url VARCHAR(500);
+ALTER TABLE user_plants ADD COLUMN image_url VARCHAR(500);
