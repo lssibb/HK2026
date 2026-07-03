@@ -9,6 +9,7 @@ import { MyPlantDetail } from "@/pages/MyPlantDetail";
 import { Favorites } from "@/pages/Favorites";
 import { ExchangeBoard } from "@/pages/ExchangeBoard";
 import { ExchangeDetail } from "@/pages/ExchangeDetail";
+import { Identify } from "@/pages/Identify";
 
 export function App() {
   return (
@@ -22,6 +23,7 @@ export function App() {
         <Route path="favorites" element={<Favorites />} />
         <Route path="exchange" element={<ExchangeBoard />} />
         <Route path="exchange/:id" element={<ExchangeDetail />} />
+        <Route path="identify" element={<Identify />} />
         <Route path="*" element={<Dashboard />} />
       </Route>
     </Routes>

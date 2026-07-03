@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal, Sprout } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Camera, Search, SlidersHorizontal, Sprout } from "lucide-react";
 
 import type { Light } from "@/api/types";
 import { LIGHT_LEVELS } from "@/api/types";
@@ -41,14 +42,22 @@ export function Catalog() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-display text-3xl font-bold tracking-tight">
-          Справочник растений
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {plants.length} видов с рекомендациями по уходу. Найдите своё и
-          добавьте в коллекцию.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            Справочник растений
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            {plants.length} видов с рекомендациями по уходу. Найдите своё и
+            добавьте в коллекцию.
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/identify">
+            <Camera className="size-4" />
+            Определить по фото
+          </Link>
+        </Button>
       </header>
 
       {/* Filter bar */}
