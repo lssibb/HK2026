@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import {
+  ArrowLeftRight,
   Heart,
   LayoutGrid,
   Leaf,
@@ -21,6 +22,7 @@ const NAV = [
   { to: "/catalog", label: "Справочник", icon: Leaf, end: false },
   { to: "/my-plants", label: "Мои растения", icon: Sprout, end: false },
   { to: "/favorites", label: "Избранное", icon: Heart, end: false },
+  { to: "/exchange", label: "Обмен", icon: ArrowLeftRight, end: false },
 ];
 
 function Brand() {

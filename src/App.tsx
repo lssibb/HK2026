@@ -7,6 +7,8 @@ import { PlantDetail } from "@/pages/PlantDetail";
 import { MyPlants } from "@/pages/MyPlants";
 import { MyPlantDetail } from "@/pages/MyPlantDetail";
 import { Favorites } from "@/pages/Favorites";
+import { ExchangeBoard } from "@/pages/ExchangeBoard";
+import { ExchangeDetail } from "@/pages/ExchangeDetail";
 
 export function App() {
   return (
@@ -18,6 +20,8 @@ export function App() {
         <Route path="my-plants" element={<MyPlants />} />
         <Route path="my-plants/:id" element={<MyPlantDetail />} />
         <Route path="favorites" element={<Favorites />} />
+        <Route path="exchange" element={<ExchangeBoard />} />
+        <Route path="exchange/:id" element={<ExchangeDetail />} />
         <Route path="*" element={<Dashboard />} />
       </Route>
     </Routes>
