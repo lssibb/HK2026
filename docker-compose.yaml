@@ -1,46 +1,46 @@
- postgres:
-    image: postgres:18.4-bookworm
-    container_name: plantcare-postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-root}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
-      POSTGRES_DB: ${POSTGRES_DB:-plantcare}
-    volumes:
-      - pgdata:/var/lib/postgresql
-    restart: always
+postgres:
+  image: postgres:18.4-bookworm
+  container_name: plantcare-postgres
+  environment:
+    POSTGRES_USER: ${POSTGRES_USER:-root}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+    POSTGRES_DB: ${POSTGRES_DB:-plantcare}
+  volumes:
+    - pgdata:/var/lib/postgresql
+  restart: always
 
-  port-forwarder:
-    image: alpine/socat:1.8.0.3
-    container_name: plantcare-postgres-port-forwarder
-    command: -d -d TCP-LISTEN:5432,fork,reuseaddr TCP-CONNECT:postgres:5432
-    ports:
-      - "127.0.0.1:5432:5432"
+port-forwarder:
+  image: alpine/socat:1.8.0.3
+  container_name: plantcare-postgres-port-forwarder
+  command: -d -d TCP-LISTEN:5432,fork,reuseaddr TCP-CONNECT:postgres:5432
+  ports:
+    - "127.0.0.1:5432:5432"
 
-  migrate:
-    image: migrate/migrate:v4.18.1
-    container_name: plantcare-migrate
-    restart: on-failure
-    depends_on:
-      - postgres
-    volumes:
-      - ./migrations:/migrations
-    command: [ "-path", "/migrations", "-database", "postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-root}@postgres:5432/${POSTGRES_DB:-plantcare}?sslmode=disable", "up" ]
+migrate:
+  image: migrate/migrate:v4.18.1
+  container_name: plantcare-migrate
+  restart: on-failure
+  depends_on:
+    - postgres
+  volumes:
+    - ./migrations:/migrations
+  command: [ "-path", "/migrations", "-database", "postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-root}@postgres:5432/${POSTGRES_DB:-plantcare}?sslmode=disable", "up" ]
 
-  api:
-    build: .
-    container_name: plantcare-api
-    restart: always
-    depends_on:
-      - postgres
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    environment:
-      DB_URL: postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-root}@postgres:5432/${POSTGRES_DB:-plantcare}?sslmode=disable
-      LOGGER_FOLDER: ./logs
-    volumes:
-      - ./logs:/logs
+api:
+  build: .
+  container_name: plantcare-api
+  restart: always
+  depends_on:
+    - postgres
+  ports:
+    - "8080:8080"
+  env_file:
+    - .env
+  environment:
+    DB_URL: postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-root}@postgres:5432/${POSTGRES_DB:-plantcare}?sslmode=disable
+    LOGGER_FOLDER: ./logs
+  volumes:
+    - ./logs:/logs
 
 volumes:
   pgdata:
