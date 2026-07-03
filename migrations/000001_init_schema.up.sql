@@ -1,4 +1,11 @@
-CREATE SCHEMA IF NOT EXISTS plant_care;
+CREATE TABLE users (
+    id           BIGSERIAL PRIMARY KEY,
+    varsion      BIGINT NOT NULL DEFAULT 1,
+    username     VARCHAR(50) UNIQUE NOT NULL,
+    created_at   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    count_plants INT DEFAULT 0
+);
 
 CREATE TABLE plants (
     id BIGSERIAL PRIMARY KEY,
@@ -14,6 +21,7 @@ CREATE TABLE plants (
 
 CREATE TABLE user_plants (
     id BIGSERIAL PRIMARY KEY,
+    version BIGINT NOT NULL DEFAULT 1,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     plant_id BIGINT REFERENCES plants(id) ON DELETE SET NULL,
     custom_name VARCHAR(255),
@@ -32,4 +40,3 @@ CREATE TABLE favorite_plants (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, plant_id)
 );
-
