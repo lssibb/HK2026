@@ -40,6 +40,7 @@ function makeTask(
     dueDate: due.toISOString(),
     daysUntil,
     status: classify(daysUntil),
+    progress: Math.max(0, (intervalDays - daysUntil) / intervalDays),
   };
 }
 

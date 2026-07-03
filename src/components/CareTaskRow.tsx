@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Droplet, Sprout } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +7,7 @@ import type { CareTask, Plant } from "@/api/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlantTile } from "@/components/PlantTile";
+import { MoistureRing } from "@/components/MoistureRing";
 import { useMarkRepotted, useMarkWatered } from "@/hooks/useUserPlants";
 import { careTypeLabel, relativeDue, statusLabel } from "@/lib/care";
 import { cn } from "@/lib/utils";
@@ -27,12 +29,18 @@ export function CareTaskRow({
   const repot = useMarkRepotted();
   const mutation = task.type === "water" ? water : repot;
   const Icon = task.type === "water" ? Droplet : Sprout;
+  const isWater = task.type === "water";
+  const [splash, setSplash] = useState(false);
 
   function done() {
+    if (isWater) {
+      setSplash(true);
+      window.setTimeout(() => setSplash(false), 850);
+    }
     mutation.mutate(task.userPlantId, {
       onSuccess: () =>
         toast.success(
-          task.type === "water"
+          isWater
             ? `${task.plantName} полит(а)`
             : `${task.plantName} пересажен(а)`,
           { description: "Следующее напоминание уже запланировано." }
@@ -40,13 +48,24 @@ export function CareTaskRow({
     });
   }
 
+  const tile = (
+    <PlantTile
+      plant={plant ?? { id: task.plantId, name: task.plantName }}
+      rounded={isWater ? "rounded-full" : "rounded-xl"}
+      className="h-full w-full"
+    />
+  );
+
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-card p-2.5 pr-3 transition-colors hover:border-border">
       <Link to={`/my-plants/${task.userPlantId}`} className="shrink-0">
-        <PlantTile
-          plant={plant ?? { id: task.plantId, name: task.plantName }}
-          className="size-12"
-        />
+        {isWater ? (
+          <MoistureRing progress={task.progress} size={48} splash={splash}>
+            {tile}
+          </MoistureRing>
+        ) : (
+          <div className="size-12">{tile}</div>
+        )}
       </Link>
 
       <div className="min-w-0 flex-1">

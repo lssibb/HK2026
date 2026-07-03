@@ -27,6 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { PlantTile } from "@/components/PlantTile";
+import { MoistureRing } from "@/components/MoistureRing";
 import { useCareTasks } from "@/hooks/useCareTasks";
 import { usePlant } from "@/hooks/usePlants";
 import {
@@ -66,6 +67,7 @@ export function MyPlantDetail() {
   const [waterDays, setWaterDays] = useState("");
   const [repotMonths, setRepotMonths] = useState("");
   const [reminders, setReminders] = useState(true);
+  const [splash, setSplash] = useState(false);
 
   useEffect(() => {
     if (!userPlant) return;
@@ -104,6 +106,14 @@ export function MyPlantDetail() {
   const waterTask = myTasks.find((t) => t.type === "water");
   const repotTask = myTasks.find((t) => t.type === "repot");
 
+  function waterNow() {
+    setSplash(true);
+    window.setTimeout(() => setSplash(false), 850);
+    water.mutate(userPlant!.id, {
+      onSuccess: () => toast.success(`${title} полит(а)`),
+    });
+  }
+
   function saveSettings() {
     update.mutate(
       {
@@ -140,11 +150,18 @@ export function MyPlantDetail() {
 
       {/* Identity */}
       <div className="flex items-start gap-4">
-        <PlantTile
-          plant={plant ?? { id: userPlant.plantId, name: title }}
-          rounded="rounded-2xl"
-          className="size-24 shrink-0 sm:size-28"
-        />
+        <MoistureRing
+          progress={userPlant.remindersEnabled ? waterTask?.progress : undefined}
+          size={104}
+          splash={splash}
+          className="mt-1"
+        >
+          <PlantTile
+            plant={plant ?? { id: userPlant.plantId, name: title }}
+            rounded="rounded-full"
+            className="h-full w-full"
+          />
+        </MoistureRing>
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl font-bold leading-tight sm:text-3xl">
             {title}
@@ -175,11 +192,7 @@ export function MyPlantDetail() {
           last={userPlant.lastWateredAt}
           actionLabel="Полил"
           pending={water.isPending}
-          onAction={() =>
-            water.mutate(userPlant.id, {
-              onSuccess: () => toast.success(`${title} полит(а)`),
-            })
-          }
+          onAction={waterNow}
         />
         <CareAction
           icon={<Repeat className="size-5 text-primary" />}

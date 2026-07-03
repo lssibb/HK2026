@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Droplet, Leaf, Sprout } from "lucide-react";
 
 import type { CareTask, Plant, UserPlant } from "@/api/types";
 import { EmptyState } from "@/components/EmptyState";
 import { PlantTile } from "@/components/PlantTile";
+import { MoistureRing } from "@/components/MoistureRing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCareTasks } from "@/hooks/useCareTasks";
@@ -24,11 +26,13 @@ export function MyPlants() {
 
   const plantById = new Map(plants.map((p) => [p.id, p]));
   const nextTaskByPlant = new Map<string, CareTask>();
+  const waterTaskByPlant = new Map<string, CareTask>();
   for (const task of tasks) {
     const current = nextTaskByPlant.get(task.userPlantId);
     if (!current || task.daysUntil < current.daysUntil) {
       nextTaskByPlant.set(task.userPlantId, task);
     }
+    if (task.type === "water") waterTaskByPlant.set(task.userPlantId, task);
   }
 
   return (
@@ -75,6 +79,7 @@ export function MyPlants() {
               userPlant={up}
               plant={plantById.get(up.plantId)}
               task={nextTaskByPlant.get(up.id)}
+              waterProgress={waterTaskByPlant.get(up.id)?.progress}
             />
           ))}
         </div>
@@ -87,21 +92,38 @@ function MyPlantCard({
   userPlant,
   plant,
   task,
+  waterProgress,
 }: {
   userPlant: UserPlant;
   plant?: Plant;
   task?: CareTask;
+  waterProgress?: number;
 }) {
   const water = useMarkWatered();
+  const [splash, setSplash] = useState(false);
   const title = userPlant.nickname || plant?.name || "Растение";
+  const hasReminders = userPlant.remindersEnabled;
+
+  function doWater() {
+    setSplash(true);
+    window.setTimeout(() => setSplash(false), 850);
+    water.mutate(userPlant.id);
+  }
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-card p-3 transition-colors hover:border-border">
       <Link to={`/my-plants/${userPlant.id}`} className="shrink-0">
-        <PlantTile
-          plant={plant ?? { id: userPlant.plantId, name: title }}
-          className="size-16"
-        />
+        <MoistureRing
+          progress={hasReminders ? waterProgress : undefined}
+          size={64}
+          splash={splash}
+        >
+          <PlantTile
+            plant={plant ?? { id: userPlant.plantId, name: title }}
+            rounded="rounded-full"
+            className="h-full w-full"
+          />
+        </MoistureRing>
       </Link>
 
       <div className="min-w-0 flex-1">
@@ -138,7 +160,7 @@ function MyPlantCard({
           variant="secondary"
           aria-label="Отметить полив"
           disabled={water.isPending}
-          onClick={() => water.mutate(userPlant.id)}
+          onClick={doWater}
         >
           <Droplet className="size-4 text-sky-500" />
         </Button>

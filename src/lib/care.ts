@@ -41,6 +41,17 @@ export function statusLabel(status: CareStatus): string {
   return STATUS[status];
 }
 
+/**
+ * Colour tone for the moisture "thirst" ring, from fresh to thirsty to overdue.
+ * Returns a Tailwind text-* class (the ring uses stroke-current).
+ */
+export function moistureTone(progress: number | undefined): string {
+  if (progress == null) return "text-muted-foreground/40";
+  if (progress >= 1) return "text-orchid";
+  if (progress >= 0.75) return "text-warn";
+  return "text-living";
+}
+
 /** "раз в неделю" / "каждые 10 дней" — a natural cadence phrase. */
 export function wateringCadence(days: number | undefined): string {
   if (!days) return "по состоянию грунта";

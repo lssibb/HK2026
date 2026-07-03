@@ -88,6 +88,11 @@ export interface CareTask {
   /** Whole days until due (negative = overdue). */
   daysUntil: number;
   status: CareStatus;
+  /**
+   * Fraction of the interval elapsed since the last action (0 = just done,
+   * 1 = due now, >1 = overdue). Drives the moisture "thirst" ring. Watering only.
+   */
+  progress?: number;
 }
 
 /** Payload for adding a plant to the personal collection. */
