@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS favorite_plants;
+DROP TABLE IF EXISTS user_plants;
+DROP TABLE IF EXISTS plants;
