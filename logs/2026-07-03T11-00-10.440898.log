@@ -1,0 +1,6 @@
+2026-07-03T11:00:10.441012	INFO	api/main.go:30	Starting application	{"port": "8080"}
+2026-07-03T11:00:10.459027	INFO	api/main.go:37	Connected to PostgreSQL database successfully.
+2026-07-03T11:00:10.459485	INFO	api/main.go:85	Server is starting	{"port": "8080"}
+2026-07-03T11:00:20.643999	INFO	middleware/logger.go:13	Incoming request	{"request_id": "616b94fa-8641-4f16-95df-475ba7c9cf9d", "method": "GET", "path": "/health", "client_ip": "172.18.0.1", "user_agent": "PostmanRuntime/7.54.0"}
+2026-07-03T11:00:20.644238	DEBUG	middleware/logger.go:22	Completed request logic	{"request_id": "616b94fa-8641-4f16-95df-475ba7c9cf9d"}
+2026-07-03T11:00:20.644303	INFO	middleware/trace.go:29	Request finished	{"request_id": "616b94fa-8641-4f16-95df-475ba7c9cf9d", "status": 200, "duration": "335.853µs"}
