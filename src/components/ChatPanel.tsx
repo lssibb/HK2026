@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MessagesSquare, Send } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { toast } from "sonner";
 
 import { ME_ID } from "@/api/types";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,12 @@ export function ChatPanel({
     const value = text.trim();
     if (!value) return;
     setText("");
-    send.mutate(value);
+    send.mutate(value, {
+      onError: () => {
+        setText(value); // restore so the message isn't lost
+        toast.error("Не удалось отправить сообщение");
+      },
+    });
   }
 
   return (
