@@ -65,6 +65,9 @@ func main() {
 	router.Use(middleware.LoggerMiddleware())
 	router.Use(middleware.PanicRecoveryMiddleware())
 
+	// Serve static files
+	router.Static("/static", "./static")
+
 	// Auth Middleware
 	authMiddleware := middleware.AuthMiddleware(cfg.JWTSecret)
 
