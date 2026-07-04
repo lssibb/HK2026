@@ -113,12 +113,18 @@ export function CreateListingDialog({ children }: { children: ReactNode }) {
 
           <div className="grid gap-2">
             <Label htmlFor="wants">Что хотите взамен</Label>
-            <Input
-              id="wants"
-              placeholder="Например, «Любой суккулент или калатею»"
-              value={wants}
-              onChange={(e) => setWants(e.target.value)}
-            />
+            <Select value={wants} onValueChange={setWants}>
+              <SelectTrigger id="wants" aria-label="Выберите желаемое растение">
+                <SelectValue placeholder="Выберите из справочника" />
+              </SelectTrigger>
+              <SelectContent>
+                {plants.map((p) => (
+                  <SelectItem key={`wants-${p.id}`} value={p.name}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-[1fr_auto] gap-4">
