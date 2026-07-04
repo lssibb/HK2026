@@ -27,6 +27,17 @@ services:
       - ./migrations:/migrations
     command: [ "-path", "/migrations", "-database", "postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-root}@postgres:5432/${POSTGRES_DB:-plantcare}?sslmode=disable", "up" ]
 
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: plantcare-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
   api:
     build: .
     container_name: plantcare-api

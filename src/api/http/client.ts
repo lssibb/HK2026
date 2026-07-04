@@ -8,7 +8,7 @@ const BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 function url(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
-  return `${BASE}/api${p}`;
+  return `${BASE}/api/v1${p}`;
 }
 
 export class ApiError extends Error {

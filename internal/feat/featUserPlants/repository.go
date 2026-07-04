@@ -11,8 +11,12 @@ import (
 type UserPlantsRepository interface {
 	AddUserPlant(ctx context.Context, plant domain.UserPlant) (domain.UserPlant, error)
 	GetUserPlants(ctx context.Context, userID int64) ([]domain.UserPlant, error)
+	GetUserPlantByID(ctx context.Context, userID, id int64) (domain.UserPlant, error)
+	UpdateUserPlant(ctx context.Context, userID, id int64, plant domain.UserPlant) (domain.UserPlant, error)
+	RemoveUserPlant(ctx context.Context, userID, id int64) error
 	AddFavorite(ctx context.Context, userID, plantID int64) error
 	GetFavorites(ctx context.Context, userID int64) ([]int64, error)
+	RemoveFavorite(ctx context.Context, userID, plantID int64) error
 	GetReminders(ctx context.Context, userID int64) ([]domain.UserPlant, error)
 }
 
@@ -64,4 +68,40 @@ func (r *postgresUserPlantsRepository) GetReminders(ctx context.Context, userID 
 	var plants []domain.UserPlant
 	err := pgxscan.Select(ctx, r.pool, &plants, query, userID)
 	return plants, err
+}
+
+func (r *postgresUserPlantsRepository) GetUserPlantByID(ctx context.Context, userID, id int64) (domain.UserPlant, error) {
+	query := `SELECT * FROM user_plants WHERE user_id = $1 AND id = $2`
+	var plant domain.UserPlant
+	err := pgxscan.Get(ctx, r.pool, &plant, query, userID, id)
+	return plant, err
+}
+
+func (r *postgresUserPlantsRepository) UpdateUserPlant(ctx context.Context, userID, id int64, plant domain.UserPlant) (domain.UserPlant, error) {
+	query := `
+		UPDATE user_plants 
+		SET custom_name = COALESCE($3, custom_name),
+			notes = COALESCE($4, notes),
+			watering_interval_days = COALESCE($5, watering_interval_days),
+			repotting_interval_days = COALESCE($6, repotting_interval_days),
+			next_watering_date = COALESCE($7, next_watering_date),
+			next_repotting_date = COALESCE($8, next_repotting_date)
+		WHERE user_id = $1 AND id = $2
+		RETURNING *
+	`
+	var updated domain.UserPlant
+	err := pgxscan.Get(ctx, r.pool, &updated, query, userID, id, plant.CustomName, plant.Notes, plant.WateringIntervalDays, plant.RepottingIntervalDays, plant.NextWateringDate, plant.NextRepottingDate)
+	return updated, err
+}
+
+func (r *postgresUserPlantsRepository) RemoveUserPlant(ctx context.Context, userID, id int64) error {
+	query := `DELETE FROM user_plants WHERE user_id = $1 AND id = $2`
+	_, err := r.pool.Exec(ctx, query, userID, id)
+	return err
+}
+
+func (r *postgresUserPlantsRepository) RemoveFavorite(ctx context.Context, userID, plantID int64) error {
+	query := `DELETE FROM favorite_plants WHERE user_id = $1 AND plant_id = $2`
+	_, err := r.pool.Exec(ctx, query, userID, plantID)
+	return err
 }

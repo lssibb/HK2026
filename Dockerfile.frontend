@@ -1,0 +1,29 @@
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Copy package descriptors and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copy application source code
+COPY . .
+
+# Set environment variable so the build process knows we are using HTTP backend
+ENV VITE_DATA_SOURCE=http
+
+# Build the Vite application
+RUN npm run build
+
+# Use Nginx to serve the static files
+FROM nginx:alpine
+
+# Copy the build output
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy the custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

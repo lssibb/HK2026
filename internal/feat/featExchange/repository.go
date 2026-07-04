@@ -11,10 +11,14 @@ import (
 type ExchangeRepository interface {
 	CreateExchange(ctx context.Context, exchange domain.PlantExchange) (domain.PlantExchange, error)
 	GetActiveExchanges(ctx context.Context) ([]domain.PlantExchange, error)
+	GetExchangeByID(ctx context.Context, id int64) (domain.PlantExchange, error)
+	UpdateExchange(ctx context.Context, id int64, patch domain.PlantExchange) (domain.PlantExchange, error)
+	RemoveExchange(ctx context.Context, id int64) error
 	CreateChat(ctx context.Context, chat domain.ExchangeChat) (domain.ExchangeChat, error)
 	GetChatsByUser(ctx context.Context, userID int64) ([]domain.ExchangeChat, error)
 	SendMessage(ctx context.Context, msg domain.ChatMessage) (domain.ChatMessage, error)
 	GetMessages(ctx context.Context, chatID int64) ([]domain.ChatMessage, error)
+	GetMessagesByExchange(ctx context.Context, exchangeID int64) ([]domain.ChatMessage, error)
 }
 
 type postgresExchangeRepository struct {
@@ -78,5 +82,46 @@ func (r *postgresExchangeRepository) GetMessages(ctx context.Context, chatID int
 	query := `SELECT * FROM chat_messages WHERE chat_id = $1 ORDER BY created_at ASC`
 	var msgs []domain.ChatMessage
 	err := pgxscan.Select(ctx, r.pool, &msgs, query, chatID)
+	return msgs, err
+}
+
+func (r *postgresExchangeRepository) GetExchangeByID(ctx context.Context, id int64) (domain.PlantExchange, error) {
+	query := `SELECT * FROM plant_exchanges WHERE id = $1`
+	var ex domain.PlantExchange
+	err := pgxscan.Get(ctx, r.pool, &ex, query, id)
+	return ex, err
+}
+
+func (r *postgresExchangeRepository) UpdateExchange(ctx context.Context, id int64, patch domain.PlantExchange) (domain.PlantExchange, error) {
+	query := `
+		UPDATE plant_exchanges
+		SET status = COALESCE(NULLIF($2, ''), status),
+			plant_name = COALESCE(NULLIF($3, ''), plant_name),
+			description = COALESCE($4, description),
+			exchange_preferences = COALESCE($5, exchange_preferences),
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = $1
+		RETURNING *
+	`
+	var updated domain.PlantExchange
+	err := pgxscan.Get(ctx, r.pool, &updated, query, id, patch.Status, patch.PlantName, patch.Description, patch.ExchangePreferences)
+	return updated, err
+}
+
+func (r *postgresExchangeRepository) RemoveExchange(ctx context.Context, id int64) error {
+	query := `DELETE FROM plant_exchanges WHERE id = $1`
+	_, err := r.pool.Exec(ctx, query, id)
+	return err
+}
+
+func (r *postgresExchangeRepository) GetMessagesByExchange(ctx context.Context, exchangeID int64) ([]domain.ChatMessage, error) {
+	query := `
+		SELECT m.* FROM chat_messages m
+		JOIN exchange_chats c ON m.chat_id = c.id
+		WHERE c.exchange_id = $1
+		ORDER BY m.created_at ASC
+	`
+	var msgs []domain.ChatMessage
+	err := pgxscan.Select(ctx, r.pool, &msgs, query, exchangeID)
 	return msgs, err
 }

@@ -32,7 +32,15 @@ func (h *PlantsHandler) ListPlants(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, plants)
+	var response []PlantResponse
+	for _, p := range plants {
+		response = append(response, mapPlantToResponse(p))
+	}
+	if response == nil {
+		response = []PlantResponse{}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *PlantsHandler) GetPlant(c *gin.Context) {
@@ -49,5 +57,5 @@ func (h *PlantsHandler) GetPlant(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, plant)
+	c.JSON(http.StatusOK, mapPlantToResponse(plant))
 }
