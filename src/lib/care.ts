@@ -46,6 +46,21 @@ export function statusLabel(status: CareStatus): string {
   return STATUS[status];
 }
 
+/** Badge variant per care status — shared by dashboard, list and detail. */
+export const CARE_STATUS_VARIANT: Record<
+  CareStatus,
+  "warn" | "orchid" | "secondary"
+> = {
+  overdue: "warn",
+  "due-today": "orchid",
+  upcoming: "secondary",
+};
+
+/** "задача" / "задачи" / "задач" for a count. */
+export function pluralTasks(n: number): string {
+  return plural(n, "задача", "задачи", "задач");
+}
+
 /**
  * Colour tone for the moisture "thirst" ring, from fresh to thirsty to overdue.
  * Returns a Tailwind text-* class (the ring uses stroke-current).
@@ -79,6 +94,7 @@ export const EXCHANGE_STATUS_VARIANT: Record<
 /** "раз в неделю" / "каждые 10 дней" — a natural cadence phrase. */
 export function wateringCadence(days: number | undefined): string {
   if (!days) return "по состоянию грунта";
+  if (days === 1) return "каждый день";
   if (days === 7) return "раз в неделю";
   if (days === 14) return "раз в 2 недели";
   return `каждые ${days} ${pluralDays(days)}`;
@@ -86,6 +102,7 @@ export function wateringCadence(days: number | undefined): string {
 
 export function repotCadence(months: number | undefined): string {
   if (!months) return "по мере роста";
+  if (months === 1) return "раз в месяц";
   if (months === 12) return "раз в год";
   const years = Math.round((months / 12) * 10) / 10;
   if (months % 12 === 0) return `раз в ${years} ${pluralYears(years)}`;

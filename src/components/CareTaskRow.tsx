@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Droplet, Sprout } from "lucide-react";
 import { toast } from "sonner";
@@ -9,14 +8,14 @@ import { Button } from "@/components/ui/button";
 import { PlantTile } from "@/components/PlantTile";
 import { MoistureRing } from "@/components/MoistureRing";
 import { useMarkRepotted, useMarkWatered } from "@/hooks/useUserPlants";
-import { careTypeLabel, relativeDue, statusLabel } from "@/lib/care";
+import { useSplash } from "@/hooks/useSplash";
+import {
+  CARE_STATUS_VARIANT,
+  careTypeLabel,
+  relativeDue,
+  statusLabel,
+} from "@/lib/care";
 import { cn } from "@/lib/utils";
-
-const STATUS_VARIANT = {
-  overdue: "warn",
-  "due-today": "orchid",
-  upcoming: "secondary",
-} as const;
 
 export function CareTaskRow({
   task,
@@ -30,13 +29,10 @@ export function CareTaskRow({
   const mutation = task.type === "water" ? water : repot;
   const Icon = task.type === "water" ? Droplet : Sprout;
   const isWater = task.type === "water";
-  const [splash, setSplash] = useState(false);
+  const [splash, triggerSplash] = useSplash();
 
   function done() {
-    if (isWater) {
-      setSplash(true);
-      window.setTimeout(() => setSplash(false), 850);
-    }
+    if (isWater) triggerSplash();
     mutation.mutate(task.userPlantId, {
       onSuccess: () =>
         toast.success(
@@ -88,7 +84,7 @@ export function CareTaskRow({
         </div>
       </div>
 
-      <Badge variant={STATUS_VARIANT[task.status]} className="hidden sm:flex">
+      <Badge variant={CARE_STATUS_VARIANT[task.status]} className="hidden sm:flex">
         {statusLabel(task.status)}
       </Badge>
 
