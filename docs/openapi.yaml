@@ -1,0 +1,483 @@
+openapi: 3.1.0
+info:
+  title: Оранжерея — Plant Care API
+  version: 0.1.0
+  description: >
+    REST contract the Go backend must implement so the React frontend can switch
+    from localStorage to the server by setting VITE_DATA_SOURCE=http. Schemas
+    mirror src/api/types.ts exactly; the HTTP adapter lives in
+    src/api/http/httpDataSource.ts. All paths are served under the /api prefix.
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local Go backend
+
+tags:
+  - name: catalogue
+  - name: favorites
+  - name: collection
+  - name: exchange
+  - name: recognition
+
+paths:
+  /plants:
+    get:
+      tags: [catalogue]
+      summary: Список растений справочника
+      operationId: listPlants
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Plant" }
+
+  /plants/{id}:
+    get:
+      tags: [catalogue]
+      summary: Карточка растения
+      operationId: getPlant
+      parameters: [{ $ref: "#/components/parameters/PlantId" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Plant" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /favorites:
+    get:
+      tags: [favorites]
+      summary: Идентификаторы избранных растений
+      operationId: listFavorites
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+    post:
+      tags: [favorites]
+      summary: Добавить в избранное
+      operationId: addFavorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plantId]
+              properties:
+                plantId: { type: string }
+      responses:
+        "204": { description: Добавлено }
+
+  /favorites/{plantId}:
+    delete:
+      tags: [favorites]
+      summary: Убрать из избранного
+      operationId: removeFavorite
+      parameters:
+        - name: plantId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Удалено }
+
+  /user-plants:
+    get:
+      tags: [collection]
+      summary: Личная коллекция пользователя
+      operationId: listUserPlants
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UserPlant" }
+    post:
+      tags: [collection]
+      summary: Добавить растение в коллекцию
+      operationId: addUserPlant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddUserPlantInput" }
+      responses:
+        "201":
+          description: Создано
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserPlant" }
+
+  /user-plants/{id}:
+    get:
+      tags: [collection]
+      summary: Растение из коллекции
+      operationId: getUserPlant
+      parameters: [{ $ref: "#/components/parameters/UserPlantId" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserPlant" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [collection]
+      summary: Обновить растение коллекции
+      operationId: updateUserPlant
+      parameters: [{ $ref: "#/components/parameters/UserPlantId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateUserPlantInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserPlant" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [collection]
+      summary: Удалить растение из коллекции
+      operationId: removeUserPlant
+      parameters: [{ $ref: "#/components/parameters/UserPlantId" }]
+      responses:
+        "204": { description: Удалено }
+
+  /user-plants/{id}/water:
+    post:
+      tags: [collection]
+      summary: Отметить полив
+      operationId: markWatered
+      parameters: [{ $ref: "#/components/parameters/UserPlantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CareActionInput" }
+      responses:
+        "200":
+          description: Обновлённое растение
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserPlant" }
+
+  /user-plants/{id}/repot:
+    post:
+      tags: [collection]
+      summary: Отметить пересадку
+      operationId: markRepotted
+      parameters: [{ $ref: "#/components/parameters/UserPlantId" }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CareActionInput" }
+      responses:
+        "200":
+          description: Обновлённое растение
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserPlant" }
+
+  /exchange/listings:
+    get:
+      tags: [exchange]
+      summary: Объявления об обмене
+      operationId: listExchangeListings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ExchangeListing" }
+    post:
+      tags: [exchange]
+      summary: Разместить объявление
+      operationId: createExchangeListing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateListingInput" }
+      responses:
+        "201":
+          description: Создано
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExchangeListing" }
+
+  /exchange/listings/{id}:
+    get:
+      tags: [exchange]
+      summary: Объявление
+      operationId: getExchangeListing
+      parameters: [{ $ref: "#/components/parameters/ListingId" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExchangeListing" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [exchange]
+      summary: Обновить объявление (статус и т. п.)
+      operationId: updateExchangeListing
+      parameters: [{ $ref: "#/components/parameters/ListingId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateListingInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExchangeListing" }
+    delete:
+      tags: [exchange]
+      summary: Удалить объявление
+      operationId: removeExchangeListing
+      parameters: [{ $ref: "#/components/parameters/ListingId" }]
+      responses:
+        "204": { description: Удалено }
+
+  /exchange/listings/{id}/messages:
+    get:
+      tags: [exchange]
+      summary: Сообщения по объявлению
+      operationId: listExchangeMessages
+      parameters: [{ $ref: "#/components/parameters/ListingId" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ExchangeMessage" }
+    post:
+      tags: [exchange]
+      summary: Отправить сообщение
+      operationId: sendExchangeMessage
+      parameters: [{ $ref: "#/components/parameters/ListingId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+      responses:
+        "201":
+          description: Отправлено
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExchangeMessage" }
+
+  /recognize:
+    post:
+      tags: [recognition]
+      summary: Распознать растение по фото
+      operationId: recognizePlant
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image: { type: string, format: binary }
+      responses:
+        "200":
+          description: Кандидаты, лучший первым
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RecognitionCandidate" }
+
+components:
+  parameters:
+    PlantId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    UserPlantId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ListingId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    NotFound:
+      description: Не найдено
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Light:
+      type: string
+      enum: [low, medium, bright, direct]
+
+    Plant:
+      type: object
+      required: [id, name, watering, light, repotting, toxic]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        latinName: { type: string }
+        imageUrl: { type: string, format: uri }
+        watering: { type: string }
+        wateringIntervalDays: { type: integer, minimum: 1 }
+        light: { $ref: "#/components/schemas/Light" }
+        lightNote: { type: string }
+        repotting: { type: string }
+        repottingIntervalMonths: { type: integer, minimum: 1 }
+        toxic: { type: boolean }
+        toxicityNote: { type: string }
+        features:
+          type: array
+          items: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+
+    UserPlant:
+      type: object
+      required: [id, plantId, dateAdded, remindersEnabled]
+      properties:
+        id: { type: string }
+        plantId: { type: string }
+        nickname: { type: string }
+        dateAdded: { type: string, format: date-time }
+        notes: { type: string }
+        wateringIntervalDays: { type: integer, minimum: 1 }
+        repottingIntervalMonths: { type: integer, minimum: 1 }
+        remindersEnabled: { type: boolean }
+        lastWateredAt: { type: string, format: date-time }
+        lastRepottedAt: { type: string, format: date-time }
+
+    AddUserPlantInput:
+      type: object
+      required: [plantId]
+      properties:
+        plantId: { type: string }
+        nickname: { type: string }
+        notes: { type: string }
+        wateringIntervalDays: { type: integer, minimum: 1 }
+        repottingIntervalMonths: { type: integer, minimum: 1 }
+        remindersEnabled: { type: boolean, default: true }
+        dateAdded: { type: string, format: date-time }
+
+    UpdateUserPlantInput:
+      type: object
+      description: Частичное обновление. Любое поле опционально.
+      properties:
+        nickname: { type: string }
+        notes: { type: string }
+        wateringIntervalDays: { type: integer, minimum: 1 }
+        repottingIntervalMonths: { type: integer, minimum: 1 }
+        remindersEnabled: { type: boolean }
+        lastWateredAt: { type: string, format: date-time }
+        lastRepottedAt: { type: string, format: date-time }
+
+    CareActionInput:
+      type: object
+      description: Время действия. Если не указано — сервер берёт текущее время.
+      properties:
+        at: { type: string, format: date-time }
+
+    ExchangeStatus:
+      type: string
+      enum: [active, reserved, closed]
+
+    ExchangeListing:
+      type: object
+      required: [id, plantId, ownerId, ownerName, condition, wants, status, createdAt]
+      properties:
+        id: { type: string }
+        plantId: { type: string }
+        ownerId:
+          type: string
+          description: '"me" для текущего пользователя, иначе id владельца'
+        ownerName: { type: string }
+        condition: { type: string }
+        description: { type: string }
+        wants: { type: string, description: Что хочет владелец взамен }
+        city: { type: string }
+        status: { $ref: "#/components/schemas/ExchangeStatus" }
+        createdAt: { type: string, format: date-time }
+
+    CreateListingInput:
+      type: object
+      required: [plantId, condition, wants]
+      properties:
+        plantId: { type: string }
+        condition: { type: string }
+        description: { type: string }
+        wants: { type: string }
+        city: { type: string }
+
+    UpdateListingInput:
+      type: object
+      description: Частичное обновление. Обычно смена статуса.
+      properties:
+        status: { $ref: "#/components/schemas/ExchangeStatus" }
+        condition: { type: string }
+        description: { type: string }
+        wants: { type: string }
+        city: { type: string }
+
+    ExchangeMessage:
+      type: object
+      required: [id, listingId, authorId, authorName, text, createdAt]
+      properties:
+        id: { type: string }
+        listingId: { type: string }
+        authorId: { type: string }
+        authorName: { type: string }
+        text: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    RecognitionCandidate:
+      type: object
+      required: [plantId, confidence]
+      properties:
+        plantId: { type: string }
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }

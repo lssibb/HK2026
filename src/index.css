@@ -1,0 +1,245 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Self-hosted variable fonts with full Cyrillic (no external CDN dependency). */
+@import "@fontsource-variable/bitter";
+@import "@fontsource-variable/golos-text";
+@import "@fontsource-variable/fraunces"; /* Latin only — used for latin binomials */
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Design direction — "Sweet Garden under grow-light".
+  Deep forest ink + fresh foliage green + a signature orchid-magenta accent
+  (the colour of LED grow lights and orchid blooms). Cool canvas, never warm cream.
+*/
+:root {
+  --radius: 0.85rem;
+
+  --background: #f5f7f3;
+  --foreground: #14261d;
+
+  --card: #ffffff;
+  --card-foreground: #14261d;
+
+  --popover: #ffffff;
+  --popover-foreground: #14261d;
+
+  /* Structural brand green — buttons, links, headings accents */
+  --primary: #1e5b41;
+  --primary-foreground: #f3f8f4;
+
+  --secondary: #e7ece4;
+  --secondary-foreground: #1e3b2d;
+
+  --muted: #eaeee7;
+  --muted-foreground: #5b6b60;
+
+  --accent: #e7ece4;
+  --accent-foreground: #14261d;
+
+  --destructive: #b23b30;
+  --destructive-foreground: #fdf3f1;
+
+  --border: #dce3d8;
+  --input: #dce3d8;
+  --ring: #c13d82;
+
+  /* Signature + semantic brand tokens */
+  --orchid: #c13d82;
+  --orchid-foreground: #ffffff;
+  --orchid-soft: #f7e3ee;
+  --living: #3f9e6a;
+  --living-soft: #e2f1e8;
+  --warn: #c0622a;
+  --warn-soft: #f6e6d8;
+
+  /* Colour of the ambient leaf background pattern (kept whisper-subtle). */
+  --leaf-ink: rgba(30, 91, 65, 0.05);
+}
+
+.dark {
+  --background: #0e1712;
+  --foreground: #e8eee8;
+
+  --card: #152219;
+  --card-foreground: #e8eee8;
+
+  --popover: #152219;
+  --popover-foreground: #e8eee8;
+
+  --primary: #4fb07e;
+  --primary-foreground: #08130d;
+
+  --secondary: #1d2c23;
+  --secondary-foreground: #dbe6dd;
+
+  --muted: #1d2c23;
+  --muted-foreground: #90a296;
+
+  --accent: #22332a;
+  --accent-foreground: #e8eee8;
+
+  --destructive: #e26e60;
+  --destructive-foreground: #1a0f0d;
+
+  --border: #26362c;
+  --input: #2a3b30;
+  --ring: #e668a8;
+
+  --orchid: #e668a8;
+  --orchid-foreground: #14060e;
+  --orchid-soft: #2a1622;
+  --living: #57c08a;
+  --living-soft: #16281e;
+  --warn: #d9853f;
+  --warn-soft: #2a1e12;
+
+  --leaf-ink: rgba(126, 194, 152, 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-orchid: var(--orchid);
+  --color-orchid-foreground: var(--orchid-foreground);
+  --color-orchid-soft: var(--orchid-soft);
+  --color-living: var(--living);
+  --color-living-soft: var(--living-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --font-display: "Bitter Variable", ui-serif, Georgia, serif;
+  --font-sans: "Golos Text Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-specimen: "Fraunces Variable", ui-serif, Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Ambient repeating leaf pattern, tinted per theme via a masked colour layer. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--leaf-ink);
+    -webkit-mask-image: url("/leaf-pattern.svg");
+    mask-image: url("/leaf-pattern.svg");
+    -webkit-mask-repeat: repeat;
+    mask-repeat: repeat;
+    -webkit-mask-size: 260px 260px;
+    mask-size: 260px 260px;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* Latin binomials — the herbarium specimen voice */
+  .specimen {
+    font-family: var(--font-specimen);
+    font-style: italic;
+    font-optical-sizing: auto;
+  }
+
+  ::selection {
+    background: var(--color-orchid);
+    color: var(--color-orchid-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Page-load stagger for lists of cards/tasks */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Watering micro-interaction: a droplet falls, then a ripple spreads. */
+@keyframes water-drop {
+  0% { transform: translateY(-160%) scale(0.7); opacity: 0; }
+  35% { opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 0; }
+}
+@keyframes ripple {
+  from { transform: scale(0.35); opacity: 0.55; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+.animate-drop { animation: water-drop 0.7s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.animate-ripple { animation: ripple 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Ambient grow-light glow behind the dashboard hero. */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.12); }
+}
+.animate-glow { animation: glow-pulse 7s ease-in-out infinite; }

@@ -1,0 +1,90 @@
+{
+  "listings": [
+    {
+      "id": "lst-chlorophytum",
+      "plantId": "chlorophytum-comosum",
+      "ownerId": "u-anya",
+      "ownerName": "Аня",
+      "condition": "Взрослое растение с несколькими детками, готовыми к отсадке",
+      "description": "Разрослось, отдаю укоренённые детки или куст целиком. Не капризное, подойдёт новичку.",
+      "wants": "Ищу любой суккулент или калатею",
+      "city": "Москва",
+      "status": "active",
+      "daysAgo": 2
+    },
+    {
+      "id": "lst-phalaenopsis",
+      "plantId": "phalaenopsis",
+      "ownerId": "u-igor",
+      "ownerName": "Игорь",
+      "condition": "Цвела дважды, два цветоноса, крепкие корни",
+      "description": "Пересадил в свежую кору весной. Здоровая, без вредителей.",
+      "wants": "Готов обменять на монстеру или замиокулькас",
+      "city": "Санкт-Петербург",
+      "status": "active",
+      "daysAgo": 4
+    },
+    {
+      "id": "lst-echeveria",
+      "plantId": "echeveria",
+      "ownerId": "u-marina",
+      "ownerName": "Марина",
+      "condition": "Розетка ~7 см, укоренённая, набирает цвет на солнце",
+      "description": "Много деток, могу отдать несколько розеток сразу.",
+      "wants": "Меняю на другой суккулент или пеларгонию",
+      "city": "Казань",
+      "status": "active",
+      "daysAgo": 1
+    },
+    {
+      "id": "lst-sansevieria",
+      "plantId": "sansevieria-trifasciata",
+      "ownerId": "u-dmitry",
+      "ownerName": "Дмитрий",
+      "condition": "Большой куст, можно поделить на 2–3 части",
+      "description": "Стоит несколько лет, очень неприхотливая. Отдам делёнку.",
+      "wants": "Отдам за спатифиллум или папоротник",
+      "city": "Москва",
+      "status": "reserved",
+      "daysAgo": 6
+    },
+    {
+      "id": "lst-calathea",
+      "plantId": "calathea",
+      "ownerId": "u-olga",
+      "ownerName": "Ольга",
+      "condition": "Молодая, 5 листьев, красивый узор",
+      "description": "Держу во влажности, листья без повреждений.",
+      "wants": "Ищу орхидею или фикус Бенджамина",
+      "city": "Екатеринбург",
+      "status": "active",
+      "daysAgo": 3
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-chloro-1",
+      "listingId": "lst-chlorophytum",
+      "authorId": "u-anya",
+      "authorName": "Аня",
+      "text": "Здравствуйте! Детки укоренённые, готовы к пересадке. Что можете предложить на обмен? 🌱",
+      "hoursAgo": 40
+    },
+    {
+      "id": "msg-orchid-1",
+      "listingId": "lst-phalaenopsis",
+      "authorId": "u-igor",
+      "authorName": "Игорь",
+      "text": "Привет! Орхидея здоровая, могу встретиться в центре на неделе.",
+      "hoursAgo": 80
+    },
+    {
+      "id": "msg-echeveria-1",
+      "listingId": "lst-echeveria",
+      "authorId": "u-marina",
+      "authorName": "Марина",
+      "text": "Добрый день! Есть несколько розеток. Пишите, если интересно 🌵",
+      "hoursAgo": 12
+    }
+  ]
+}
