@@ -3,6 +3,7 @@ import { ArrowLeftRight, Plus } from "lucide-react";
 import { ME_ID } from "@/api/types";
 import { CreateListingDialog } from "@/components/CreateListingDialog";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { ExchangeCard } from "@/components/ExchangeCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +11,12 @@ import { useExchangeListings } from "@/hooks/useExchange";
 import { usePlants } from "@/hooks/usePlants";
 
 export function ExchangeBoard() {
-  const { data: listings = [], isLoading } = useExchangeListings();
+  const {
+    data: listings = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useExchangeListings();
   const { data: plants = [] } = usePlants();
   const plantById = new Map(plants.map((p) => [p.id, p]));
 
@@ -43,7 +49,9 @@ export function ExchangeBoard() {
         </TabsList>
 
         <TabsContent value="board">
-          {isLoading ? (
+          {isError ? (
+            <ErrorState onRetry={() => refetch()} />
+          ) : isLoading ? (
             <Grid skeleton />
           ) : board.length === 0 ? (
             <EmptyState
@@ -65,7 +73,11 @@ export function ExchangeBoard() {
         </TabsContent>
 
         <TabsContent value="mine">
-          {mine.length === 0 ? (
+          {isError ? (
+            <ErrorState onRetry={() => refetch()} />
+          ) : isLoading ? (
+            <Grid skeleton />
+          ) : mine.length === 0 ? (
             <EmptyState
               icon={ArrowLeftRight}
               title="У вас нет объявлений"

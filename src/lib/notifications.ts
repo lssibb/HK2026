@@ -55,11 +55,12 @@ export function syncNotifications(tasks: CareTask[]): void {
         icon: "/leaf.svg",
         tag: task.id,
       });
+      // Mark as announced only on success, so a throwing platform retries later.
+      seen.add(key);
+      changed = true;
     } catch {
-      /* notification construction can throw on some platforms — ignore */
+      /* notification construction can throw on some platforms — retry next cycle */
     }
-    seen.add(key);
-    changed = true;
   }
 
   // Keep only keys that are still due, so the store doesn't grow forever.

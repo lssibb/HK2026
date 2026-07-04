@@ -16,7 +16,7 @@ export class HttpRecognizer implements PlantRecognizer {
     const body = new FormData();
     body.append("image", file);
     // Let the browser set the multipart boundary — do not set Content-Type.
-    const res = await fetch(`${BASE}/api/recognize`, { method: "POST", body });
+    const res = await fetch(`${BASE}/api/v1/ai/recognize`, { method: "POST", body });
     if (!res.ok) {
       let message = `${res.status} ${res.statusText}`;
       try {

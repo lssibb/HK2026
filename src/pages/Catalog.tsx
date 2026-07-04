@@ -5,6 +5,7 @@ import { Camera, Search, SlidersHorizontal, Sprout } from "lucide-react";
 import type { Light } from "@/api/types";
 import { LIGHT_LEVELS } from "@/api/types";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { PlantCard } from "@/components/PlantCard";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +22,7 @@ import { LIGHT_LABEL } from "@/lib/care";
 type SafeFilter = "all" | "safe";
 
 export function Catalog() {
-  const { data: plants = [], isLoading } = usePlants();
+  const { data: plants = [], isLoading, isError, refetch } = usePlants();
   const [query, setQuery] = useState("");
   const [light, setLight] = useState<Light | "any">("any");
   const [safe, setSafe] = useState<SafeFilter>("all");
@@ -104,7 +105,9 @@ export function Catalog() {
       </div>
 
       {/* Results */}
-      {isLoading ? (
+      {isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div

@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Droplet, Leaf, Sprout } from "lucide-react";
 
 import type { CareTask, Plant, UserPlant } from "@/api/types";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { PlantTile } from "@/components/PlantTile";
 import { MoistureRing } from "@/components/MoistureRing";
 import { Badge } from "@/components/ui/badge";
@@ -11,16 +11,21 @@ import { Button } from "@/components/ui/button";
 import { useCareTasks } from "@/hooks/useCareTasks";
 import { usePlants } from "@/hooks/usePlants";
 import { useMarkWatered, useUserPlants } from "@/hooks/useUserPlants";
-import { careTypeLabel, relativeDue, statusLabel } from "@/lib/care";
-
-const STATUS_VARIANT = {
-  overdue: "warn",
-  "due-today": "orchid",
-  upcoming: "secondary",
-} as const;
+import { useSplash } from "@/hooks/useSplash";
+import {
+  CARE_STATUS_VARIANT,
+  careTypeLabel,
+  relativeDue,
+  statusLabel,
+} from "@/lib/care";
 
 export function MyPlants() {
-  const { data: userPlants = [], isLoading } = useUserPlants();
+  const {
+    data: userPlants = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useUserPlants();
   const { data: plants = [] } = usePlants();
   const { tasks } = useCareTasks();
 
@@ -48,7 +53,9 @@ export function MyPlants() {
         </p>
       </header>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
@@ -100,13 +107,12 @@ function MyPlantCard({
   waterProgress?: number;
 }) {
   const water = useMarkWatered();
-  const [splash, setSplash] = useState(false);
+  const [splash, triggerSplash] = useSplash();
   const title = userPlant.nickname || plant?.name || "Растение";
   const hasReminders = userPlant.remindersEnabled;
 
   function doWater() {
-    setSplash(true);
-    window.setTimeout(() => setSplash(false), 850);
+    triggerSplash();
     water.mutate(userPlant.id);
   }
 
@@ -140,7 +146,7 @@ function MyPlantCard({
         )}
         {task ? (
           <div className="mt-1.5 flex items-center gap-2">
-            <Badge variant={STATUS_VARIANT[task.status]}>
+            <Badge variant={CARE_STATUS_VARIANT[task.status]}>
               {statusLabel(task.status)}
             </Badge>
             <span className="truncate text-xs text-muted-foreground">

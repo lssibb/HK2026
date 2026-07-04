@@ -2,17 +2,21 @@ import { Link } from "react-router-dom";
 import { Heart, Leaf } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { PlantCard } from "@/components/PlantCard";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
 import { usePlants } from "@/hooks/usePlants";
 
 export function Favorites() {
-  const { data: plants = [] } = usePlants();
-  const { data: favorites = [] } = useFavorites();
+  const plantsQ = usePlants();
+  const favoritesQ = useFavorites();
+  const plants = plantsQ.data ?? [];
+  const favorites = favoritesQ.data ?? [];
 
   const favSet = new Set(favorites);
   const favPlants = plants.filter((p) => favSet.has(p.id));
+  const isError = plantsQ.isError || favoritesQ.isError;
 
   return (
     <div className="space-y-6">
@@ -25,7 +29,14 @@ export function Favorites() {
         </p>
       </header>
 
-      {favPlants.length === 0 ? (
+      {isError ? (
+        <ErrorState
+          onRetry={() => {
+            plantsQ.refetch();
+            favoritesQ.refetch();
+          }}
+        />
+      ) : favPlants.length === 0 ? (
         <EmptyState
           icon={Heart}
           title="Здесь пока пусто"

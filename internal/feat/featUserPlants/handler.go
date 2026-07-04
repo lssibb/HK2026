@@ -2,6 +2,8 @@ package userplants_service
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	domain "github.com/lssibb/Sweet-Garden-HITS/internal/core/domain/user_plant"
 	"github.com/gin-gonic/gin"
@@ -16,15 +18,22 @@ func NewUserPlantsHandler(service *UserPlantsService) *UserPlantsHandler {
 }
 
 func (h *UserPlantsHandler) RegisterRoutes(router *gin.Engine, authMiddleware gin.HandlerFunc) {
-	protected := router.Group("/api/v1/user", authMiddleware)
+	userPlants := router.Group("/api/v1/user-plants", authMiddleware)
 	{
-		protected.POST("/plants", h.AddUserPlant)
-		protected.GET("/plants", h.GetUserPlants)
-		
-		protected.POST("/favorites", h.AddFavorite)
-		protected.GET("/favorites", h.GetFavorites)
-		
-		protected.GET("/reminders", h.GetReminders)
+		userPlants.GET("", h.ListUserPlants)
+		userPlants.POST("", h.AddUserPlant)
+		userPlants.GET("/:id", h.GetUserPlant)
+		userPlants.PATCH("/:id", h.UpdateUserPlant)
+		userPlants.DELETE("/:id", h.RemoveUserPlant)
+		userPlants.POST("/:id/water", h.MarkWatered)
+		userPlants.POST("/:id/repot", h.MarkRepotted)
+	}
+
+	favorites := router.Group("/api/v1/favorites", authMiddleware)
+	{
+		favorites.GET("", h.ListFavorites)
+		favorites.POST("", h.AddFavorite)
+		favorites.DELETE("/:plantId", h.RemoveFavorite)
 	}
 }
 
@@ -37,26 +46,7 @@ func (h *UserPlantsHandler) getUserID(c *gin.Context) (int64, bool) {
 	return userID.(int64), true
 }
 
-func (h *UserPlantsHandler) AddUserPlant(c *gin.Context) {
-	userID, ok := h.getUserID(c)
-	if !ok { return }
-
-	var plant domain.UserPlant
-	if err := c.ShouldBindJSON(&plant); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	created, err := h.service.AddUserPlant(c.Request.Context(), userID, plant)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add plant to personal collection"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, created)
-}
-
-func (h *UserPlantsHandler) GetUserPlants(c *gin.Context) {
+func (h *UserPlantsHandler) ListUserPlants(c *gin.Context) {
 	userID, ok := h.getUserID(c)
 	if !ok { return }
 
@@ -66,11 +56,216 @@ func (h *UserPlantsHandler) GetUserPlants(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, plants)
+	var response []UserPlantResponse
+	for _, p := range plants {
+		response = append(response, mapUserPlantToResponse(p))
+	}
+	if response == nil {
+		response = []UserPlantResponse{}
+	}
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *UserPlantsHandler) AddUserPlant(c *gin.Context) {
+	userID, ok := h.getUserID(c)
+	if !ok { return }
+
+	var input AddUserPlantInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	plantID, err := strconv.ParseInt(input.PlantID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid plantId"})
+		return
+	}
+
+	var repottingDays *int
+	if input.RepottingIntervalMonths != nil {
+		days := *input.RepottingIntervalMonths * 30
+		repottingDays = &days
+	}
+
+	addedDate := time.Now()
+	if input.DateAdded != nil {
+		if parsed, err := time.Parse(time.RFC3339, *input.DateAdded); err == nil {
+			addedDate = parsed
+		}
+	}
+
+	plant := domain.UserPlant{
+		PlantID:               &plantID,
+		CustomName:            input.Nickname,
+		Notes:                 input.Notes,
+		WateringIntervalDays:  input.WateringIntervalDays,
+		RepottingIntervalDays: repottingDays,
+		AddedDate:             addedDate,
+	}
+
+	created, err := h.service.AddUserPlant(c.Request.Context(), userID, plant)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add plant to collection"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, mapUserPlantToResponse(created))
+}
+
+func (h *UserPlantsHandler) GetUserPlant(c *gin.Context) {
+	userID, ok := h.getUserID(c)
+	if !ok { return }
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	plant, err := h.service.GetUserPlantByID(c.Request.Context(), userID, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, mapUserPlantToResponse(plant))
+}
+
+func (h *UserPlantsHandler) UpdateUserPlant(c *gin.Context) {
+	userID, ok := h.getUserID(c)
+	if !ok { return }
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input UpdateUserPlantInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var repottingDays *int
+	if input.RepottingIntervalMonths != nil {
+		days := *input.RepottingIntervalMonths * 30
+		repottingDays = &days
+	}
+
+	var nextWatering *time.Time
+	if input.LastWateredAt != nil && input.WateringIntervalDays != nil {
+		if lw, err := time.Parse(time.RFC3339, *input.LastWateredAt); err == nil {
+			nw := lw.AddDate(0, 0, *input.WateringIntervalDays)
+			nextWatering = &nw
+		}
+	}
+
+	var nextRepotting *time.Time
+	if input.LastRepottedAt != nil && repottingDays != nil {
+		if lr, err := time.Parse(time.RFC3339, *input.LastRepottedAt); err == nil {
+			nr := lr.AddDate(0, 0, *repottingDays)
+			nextRepotting = &nr
+		}
+	}
+
+	patch := domain.UserPlant{
+		CustomName:            input.Nickname,
+		Notes:                 input.Notes,
+		WateringIntervalDays:  input.WateringIntervalDays,
+		RepottingIntervalDays: repottingDays,
+		NextWateringDate:      nextWatering,
+		NextRepottingDate:     nextRepotting,
+	}
+
+	updated, err := h.service.UpdateUserPlant(c.Request.Context(), userID, id, patch)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+		return
+	}
+
+	c.JSON(http.StatusOK, mapUserPlantToResponse(updated))
+}
+
+func (h *UserPlantsHandler) RemoveUserPlant(c *gin.Context) {
+	userID, ok := h.getUserID(c)
+	if !ok { return }
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.service.RemoveUserPlant(c.Request.Context(), userID, id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (h *UserPlantsHandler) MarkWatered(c *gin.Context) {
+	userID, ok := h.getUserID(c)
+	if !ok { return }
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input CareActionInput
+	_ = c.ShouldBindJSON(&input) // optional
+
+	at := time.Now()
+	if input.At != nil {
+		if parsed, err := time.Parse(time.RFC3339, *input.At); err == nil {
+			at = parsed
+		}
+	}
+
+	updated, err := h.service.MarkWatered(c.Request.Context(), userID, id, at)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+		return
+	}
+
+	c.JSON(http.StatusOK, mapUserPlantToResponse(updated))
+}
+
+func (h *UserPlantsHandler) MarkRepotted(c *gin.Context) {
+	userID, ok := h.getUserID(c)
+	if !ok { return }
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input CareActionInput
+	_ = c.ShouldBindJSON(&input) // optional
+
+	at := time.Now()
+	if input.At != nil {
+		if parsed, err := time.Parse(time.RFC3339, *input.At); err == nil {
+			at = parsed
+		}
+	}
+
+	updated, err := h.service.MarkRepotted(c.Request.Context(), userID, id, at)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+		return
+	}
+
+	c.JSON(http.StatusOK, mapUserPlantToResponse(updated))
 }
 
 type addFavoriteReq struct {
-	PlantID int64 `json:"plant_id" binding:"required"`
+	PlantID string `json:"plantId" binding:"required"`
 }
 
 func (h *UserPlantsHandler) AddFavorite(c *gin.Context) {
@@ -83,15 +278,21 @@ func (h *UserPlantsHandler) AddFavorite(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AddFavorite(c.Request.Context(), userID, req.PlantID); err != nil {
+	plantID, err := strconv.ParseInt(req.PlantID, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid plantId"})
+		return
+	}
+
+	if err := h.service.AddFavorite(c.Request.Context(), userID, plantID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add favorite"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "added to favorites"})
+	c.Status(http.StatusNoContent)
 }
 
-func (h *UserPlantsHandler) GetFavorites(c *gin.Context) {
+func (h *UserPlantsHandler) ListFavorites(c *gin.Context) {
 	userID, ok := h.getUserID(c)
 	if !ok { return }
 
@@ -101,18 +302,31 @@ func (h *UserPlantsHandler) GetFavorites(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"favorite_plant_ids": plantIDs})
+	var response []string
+	for _, id := range plantIDs {
+		response = append(response, strconv.FormatInt(id, 10))
+	}
+	if response == nil {
+		response = []string{}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
-func (h *UserPlantsHandler) GetReminders(c *gin.Context) {
+func (h *UserPlantsHandler) RemoveFavorite(c *gin.Context) {
 	userID, ok := h.getUserID(c)
 	if !ok { return }
 
-	reminders, err := h.service.GetReminders(c.Request.Context(), userID)
+	plantID, err := strconv.ParseInt(c.Param("plantId"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get reminders"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid plantId"})
 		return
 	}
 
-	c.JSON(http.StatusOK, reminders)
+	if err := h.service.RemoveFavorite(c.Request.Context(), userID, plantID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove favorite"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

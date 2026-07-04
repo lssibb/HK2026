@@ -35,10 +35,11 @@ export function Identify() {
   function onSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(file);
-    });
+    // Compute the URL outside the state updater (updaters must be pure — under
+    // StrictMode a side-effect there would leak a blob URL). The cleanup effect
+    // revokes the previous preview when it changes.
+    const url = URL.createObjectURL(file);
+    setPreview(url);
     recognize.reset();
     recognize.mutate(file);
   }

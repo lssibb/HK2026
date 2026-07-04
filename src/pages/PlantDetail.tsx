@@ -12,6 +12,7 @@ import {
 import type { ReactNode } from "react";
 
 import { AddToMyPlantsDialog } from "@/components/AddToMyPlantsDialog";
+import { ErrorState } from "@/components/ErrorState";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { LightArc } from "@/components/CareSpec";
 import { PlantTile } from "@/components/PlantTile";
@@ -26,10 +27,14 @@ import {
 
 export function PlantDetail() {
   const { id } = useParams();
-  const { data: plant, isLoading } = usePlant(id);
+  const { data: plant, isLoading, isError, refetch } = usePlant(id);
 
   if (isLoading) {
     return <div className="h-96 animate-pulse rounded-2xl bg-muted/40" />;
+  }
+
+  if (isError) {
+    return <ErrorState onRetry={() => refetch()} />;
   }
 
   if (!plant) {

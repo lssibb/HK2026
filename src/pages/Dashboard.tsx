@@ -11,6 +11,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { usePlants } from "@/hooks/usePlants";
 import { useUserPlants } from "@/hooks/useUserPlants";
 import { activeTasks } from "@/lib/reminders";
+import { pluralTasks } from "@/lib/care";
 import { recommendPlants } from "@/lib/recommend";
 
 function greeting(): string {
@@ -53,7 +54,7 @@ export function Dashboard() {
             <>
               Сегодня в Sweet Garden{" "}
               <span className="text-orchid tabular-nums">{activeCount}</span>{" "}
-              {active.length === 1 ? "задача" : "дела"}
+              {pluralTasks(active.length)}
             </>
           ) : (
             "Всё полито. Растения довольны"

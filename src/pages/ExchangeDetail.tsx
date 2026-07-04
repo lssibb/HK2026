@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { ExchangeStatus } from "@/api/types";
 import { ME_ID } from "@/api/types";
 import { ChatPanel } from "@/components/ChatPanel";
+import { ErrorState } from "@/components/ErrorState";
 import { PlantTile } from "@/components/PlantTile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,13 +37,16 @@ const STATUSES: ExchangeStatus[] = ["active", "reserved", "closed"];
 export function ExchangeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: listing, isLoading } = useExchangeListing(id);
+  const { data: listing, isLoading, isError, refetch } = useExchangeListing(id);
   const { data: plant } = usePlant(listing?.plantId);
   const update = useUpdateListing();
   const remove = useRemoveListing();
 
   if (isLoading) {
     return <div className="h-96 animate-pulse rounded-2xl bg-muted/40" />;
+  }
+  if (isError) {
+    return <ErrorState onRetry={() => refetch()} />;
   }
   if (!listing) {
     return (

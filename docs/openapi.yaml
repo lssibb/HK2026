@@ -397,7 +397,9 @@ components:
 
     UpdateUserPlantInput:
       type: object
-      description: Частичное обновление. Любое поле опционально.
+      description: >
+        Частичное обновление. Отсутствующее поле не меняется; `null` очищает поле
+        (фронт шлёт null для очистки заметок/интервалов).
       properties:
         nickname: { type: string }
         notes: { type: string }

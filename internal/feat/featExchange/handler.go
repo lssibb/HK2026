@@ -17,16 +17,16 @@ func NewExchangeHandler(service *ExchangeService) *ExchangeHandler {
 }
 
 func (h *ExchangeHandler) RegisterRoutes(router *gin.Engine, authMiddleware gin.HandlerFunc) {
-	protected := router.Group("/api/v1/exchange", authMiddleware)
+	exchange := router.Group("/api/v1/exchange", authMiddleware)
 	{
-		protected.POST("/ads", h.CreateExchange)
-		protected.GET("/ads", h.GetActiveExchanges)
-		
-		protected.POST("/chats", h.CreateChat)
-		protected.GET("/chats", h.GetChats)
-		
-		protected.POST("/chats/:chat_id/messages", h.SendMessage)
-		protected.GET("/chats/:chat_id/messages", h.GetMessages)
+		exchange.GET("/listings", h.ListListings)
+		exchange.POST("/listings", h.CreateListing)
+		exchange.GET("/listings/:id", h.GetListing)
+		exchange.PATCH("/listings/:id", h.UpdateListing)
+		exchange.DELETE("/listings/:id", h.RemoveListing)
+
+		exchange.GET("/listings/:id/messages", h.GetMessages)
+		exchange.POST("/listings/:id/messages", h.SendMessage)
 	}
 }
 
@@ -39,83 +39,134 @@ func (h *ExchangeHandler) getUserID(c *gin.Context) (int64, bool) {
 	return userID.(int64), true
 }
 
-func (h *ExchangeHandler) CreateExchange(c *gin.Context) {
-	userID, ok := h.getUserID(c)
-	if !ok { return }
-
-	var ex domain.PlantExchange
-	if err := c.ShouldBindJSON(&ex); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	created, err := h.service.CreateExchange(c.Request.Context(), userID, ex)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create exchange ad"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, created)
-}
-
-func (h *ExchangeHandler) GetActiveExchanges(c *gin.Context) {
+func (h *ExchangeHandler) ListListings(c *gin.Context) {
 	exchanges, err := h.service.GetActiveExchanges(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get exchanges"})
 		return
 	}
 
-	c.JSON(http.StatusOK, exchanges)
+	var response []ExchangeListingResponse
+	for _, ex := range exchanges {
+		response = append(response, mapExchangeToResponse(ex))
+	}
+	if response == nil {
+		response = []ExchangeListingResponse{}
+	}
+	c.JSON(http.StatusOK, response)
 }
 
-type createChatReq struct {
-	ExchangeID int64 `json:"exchange_id" binding:"required"`
-}
-
-func (h *ExchangeHandler) CreateChat(c *gin.Context) {
+func (h *ExchangeHandler) CreateListing(c *gin.Context) {
 	userID, ok := h.getUserID(c)
 	if !ok { return }
 
-	var req createChatReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var input CreateListingInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	chat, err := h.service.CreateChat(c.Request.Context(), userID, req.ExchangeID)
+	plantID, err := strconv.ParseInt(input.PlantID, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid plantId"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, chat)
+	ex := domain.PlantExchange{
+		PlantID:             &plantID,
+		PlantName:           input.Condition,
+		Description:         input.Description,
+		ExchangePreferences: &input.Wants,
+	}
+
+	created, err := h.service.CreateExchange(c.Request.Context(), userID, ex)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create exchange"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, mapExchangeToResponse(created))
 }
 
-func (h *ExchangeHandler) GetChats(c *gin.Context) {
-	userID, ok := h.getUserID(c)
-	if !ok { return }
-
-	chats, err := h.service.GetChatsByUser(c.Request.Context(), userID)
+func (h *ExchangeHandler) GetListing(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get chats"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	c.JSON(http.StatusOK, chats)
+	ex, err := h.service.GetExchangeByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, mapExchangeToResponse(ex))
+}
+
+func (h *ExchangeHandler) UpdateListing(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input UpdateListingInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	patch := domain.PlantExchange{}
+	if input.Status != nil {
+		patch.Status = *input.Status
+	}
+	if input.Condition != nil {
+		patch.PlantName = *input.Condition
+	}
+	if input.Description != nil {
+		patch.Description = input.Description
+	}
+	if input.Wants != nil {
+		patch.ExchangePreferences = input.Wants
+	}
+
+	updated, err := h.service.UpdateExchange(c.Request.Context(), id, patch)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update"})
+		return
+	}
+
+	c.JSON(http.StatusOK, mapExchangeToResponse(updated))
+}
+
+func (h *ExchangeHandler) RemoveListing(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.service.RemoveExchange(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
 
 type sendMsgReq struct {
-	Message string `json:"message" binding:"required"`
+	Text string `json:"text" binding:"required"`
 }
 
 func (h *ExchangeHandler) SendMessage(c *gin.Context) {
 	userID, ok := h.getUserID(c)
 	if !ok { return }
 
-	chatIDParam := c.Param("chat_id")
-	chatID, err := strconv.ParseInt(chatIDParam, 10, 64)
+	listingIDStr := c.Param("id")
+	exchangeID, err := strconv.ParseInt(listingIDStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid listing id"})
 		return
 	}
 
@@ -125,31 +176,36 @@ func (h *ExchangeHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	msg, err := h.service.SendMessage(c.Request.Context(), userID, chatID, req.Message)
+	msg, err := h.service.SendMessageToExchange(c.Request.Context(), userID, exchangeID, req.Text)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, msg)
+	c.JSON(http.StatusCreated, mapMessageToResponse(msg, listingIDStr))
 }
 
 func (h *ExchangeHandler) GetMessages(c *gin.Context) {
-	_, ok := h.getUserID(c)
-	if !ok { return }
-
-	chatIDParam := c.Param("chat_id")
-	chatID, err := strconv.ParseInt(chatIDParam, 10, 64)
+	listingIDStr := c.Param("id")
+	exchangeID, err := strconv.ParseInt(listingIDStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid chat id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid listing id"})
 		return
 	}
 
-	msgs, err := h.service.GetMessages(c.Request.Context(), chatID)
+	msgs, err := h.service.GetMessagesByExchange(c.Request.Context(), exchangeID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get messages"})
 		return
 	}
 
-	c.JSON(http.StatusOK, msgs)
+	var response []ExchangeMessageResponse
+	for _, msg := range msgs {
+		response = append(response, mapMessageToResponse(msg, listingIDStr))
+	}
+	if response == nil {
+		response = []ExchangeMessageResponse{}
+	}
+
+	c.JSON(http.StatusOK, response)
 }

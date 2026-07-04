@@ -38,6 +38,22 @@ func (m *MockUserPlantsRepository) GetReminders(ctx context.Context, userID int6
 	args := m.Called(ctx, userID)
 	return args.Get(0).([]domain.UserPlant), args.Error(1)
 }
+func (m *MockUserPlantsRepository) GetUserPlantByID(ctx context.Context, userID, id int64) (domain.UserPlant, error) {
+	args := m.Called(ctx, userID, id)
+	return args.Get(0).(domain.UserPlant), args.Error(1)
+}
+func (m *MockUserPlantsRepository) UpdateUserPlant(ctx context.Context, userID, id int64, plant domain.UserPlant) (domain.UserPlant, error) {
+	args := m.Called(ctx, userID, id, plant)
+	return args.Get(0).(domain.UserPlant), args.Error(1)
+}
+func (m *MockUserPlantsRepository) RemoveUserPlant(ctx context.Context, userID, id int64) error {
+	args := m.Called(ctx, userID, id)
+	return args.Error(0)
+}
+func (m *MockUserPlantsRepository) RemoveFavorite(ctx context.Context, userID, plantID int64) error {
+	args := m.Called(ctx, userID, plantID)
+	return args.Error(0)
+}
 
 func TestAddUserPlant(t *testing.T) {
 	mockRepo := new(MockUserPlantsRepository)

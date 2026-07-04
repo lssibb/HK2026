@@ -38,6 +38,22 @@ func (m *MockExchangeRepository) GetMessages(ctx context.Context, chatID int64) 
 	args := m.Called(ctx, chatID)
 	return args.Get(0).([]domain.ChatMessage), args.Error(1)
 }
+func (m *MockExchangeRepository) GetExchangeByID(ctx context.Context, id int64) (domain.PlantExchange, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(domain.PlantExchange), args.Error(1)
+}
+func (m *MockExchangeRepository) UpdateExchange(ctx context.Context, id int64, patch domain.PlantExchange) (domain.PlantExchange, error) {
+	args := m.Called(ctx, id, patch)
+	return args.Get(0).(domain.PlantExchange), args.Error(1)
+}
+func (m *MockExchangeRepository) RemoveExchange(ctx context.Context, id int64) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+func (m *MockExchangeRepository) GetMessagesByExchange(ctx context.Context, exchangeID int64) ([]domain.ChatMessage, error) {
+	args := m.Called(ctx, exchangeID)
+	return args.Get(0).([]domain.ChatMessage), args.Error(1)
+}
 
 func TestCreateExchange(t *testing.T) {
 	mockRepo := new(MockExchangeRepository)

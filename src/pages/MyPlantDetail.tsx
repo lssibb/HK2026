@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { PlantTile } from "@/components/PlantTile";
 import { MoistureRing } from "@/components/MoistureRing";
+import { ErrorState } from "@/components/ErrorState";
 import { useCareTasks } from "@/hooks/useCareTasks";
 import { usePlant } from "@/hooks/usePlants";
 import {
@@ -37,7 +38,9 @@ import {
   useUpdateUserPlant,
   useUserPlant,
 } from "@/hooks/useUserPlants";
+import { useSplash } from "@/hooks/useSplash";
 import {
+  CARE_STATUS_VARIANT,
   careTypeLabel,
   humanDate,
   relativeDue,
@@ -45,16 +48,10 @@ import {
 } from "@/lib/care";
 import { cn } from "@/lib/utils";
 
-const STATUS_VARIANT = {
-  overdue: "warn",
-  "due-today": "orchid",
-  upcoming: "secondary",
-} as const;
-
 export function MyPlantDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: userPlant, isLoading } = useUserPlant(id);
+  const { data: userPlant, isLoading, isError, refetch } = useUserPlant(id);
   const { data: plant } = usePlant(userPlant?.plantId);
   const { tasks } = useCareTasks();
 
@@ -67,8 +64,10 @@ export function MyPlantDetail() {
   const [waterDays, setWaterDays] = useState("");
   const [repotMonths, setRepotMonths] = useState("");
   const [reminders, setReminders] = useState(true);
-  const [splash, setSplash] = useState(false);
+  const [splash, triggerSplash] = useSplash();
 
+  // Seed the form only when we switch to a different plant — not on every
+  // background refetch — so unsaved edits aren't wiped by a "Полил"/toggle.
   useEffect(() => {
     if (!userPlant) return;
     setNotes(userPlant.notes ?? "");
@@ -83,10 +82,14 @@ export function MyPlantDetail() {
         : ""
     );
     setReminders(userPlant.remindersEnabled);
-  }, [userPlant]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPlant?.id]);
 
   if (isLoading) {
     return <div className="h-96 animate-pulse rounded-2xl bg-muted/40" />;
+  }
+  if (isError) {
+    return <ErrorState onRetry={() => refetch()} />;
   }
   if (!userPlant) {
     return (
@@ -107,8 +110,7 @@ export function MyPlantDetail() {
   const repotTask = myTasks.find((t) => t.type === "repot");
 
   function waterNow() {
-    setSplash(true);
-    window.setTimeout(() => setSplash(false), 850);
+    triggerSplash();
     water.mutate(userPlant!.id, {
       onSuccess: () => toast.success(`${title} полит(а)`),
     });
@@ -342,7 +344,7 @@ function CareAction({
           <h3 className="font-display text-base font-bold">{title}</h3>
         </div>
         {task && (
-          <Badge variant={STATUS_VARIANT[task.status]}>
+          <Badge variant={CARE_STATUS_VARIANT[task.status]}>
             {statusLabel(task.status)}
           </Badge>
         )}

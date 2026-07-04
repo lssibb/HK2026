@@ -9,7 +9,17 @@ import type {
   UpdateUserPlantInput,
   UserPlant,
 } from "../types";
-import { http } from "./client";
+import { ApiError, http } from "./client";
+
+/** Map a 404 to `undefined` so get-by-id matches the DataSource contract. */
+async function orUndefined<T>(p: Promise<T>): Promise<T | undefined> {
+  try {
+    return await p;
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return undefined;
+    throw e;
+  }
+}
 
 /**
  * REST adapter for the Go backend. Endpoints and payloads follow
@@ -27,7 +37,7 @@ export class HttpDataSource implements DataSource {
   }
 
   async getPlant(id: string): Promise<Plant | undefined> {
-    return http.get<Plant>(`/plants/${id}`);
+    return orUndefined(http.get<Plant>(`/plants/${id}`));
   }
 
   listFavorites(): Promise<string[]> {
@@ -47,7 +57,7 @@ export class HttpDataSource implements DataSource {
   }
 
   async getUserPlant(id: string): Promise<UserPlant | undefined> {
-    return http.get<UserPlant>(`/user-plants/${id}`);
+    return orUndefined(http.get<UserPlant>(`/user-plants/${id}`));
   }
 
   addUserPlant(input: AddUserPlantInput): Promise<UserPlant> {
@@ -78,7 +88,7 @@ export class HttpDataSource implements DataSource {
   }
 
   async getExchangeListing(id: string): Promise<ExchangeListing | undefined> {
-    return http.get<ExchangeListing>(`/exchange/listings/${id}`);
+    return orUndefined(http.get<ExchangeListing>(`/exchange/listings/${id}`));
   }
 
   createExchangeListing(input: CreateListingInput): Promise<ExchangeListing> {
